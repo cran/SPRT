@@ -1,0 +1,4 @@
+S3method(SPRT,default)
+S3method(plot,SPRT)
+S3method(print,SPRT)
+exportPattern("^[[:alpha:]]+")
