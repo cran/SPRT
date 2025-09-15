@@ -1,0 +1,126 @@
+---
+title: "Introduction to SPRT package"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to SPRT package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Overview
+
+The **Sequential Probability Ratio Test (SPRT)**, proposed by Abraham Wald (1945), is a method of hypothesis testing that evaluates data **sequentially** rather than fixing the sample size in advance.  
+It is widely used in **quality control, clinical trials, and agricultural research** where early stopping can save both time and resources.
+
+---
+
+# Theoretical Background
+
+We test simple hypotheses:
+
+\[
+H_0: \theta = \theta_0 \quad \text{vs.} \quad H_1: \theta = \theta_1
+\]
+
+After \(n\) observations \((X_1, X_2, \ldots, X_n)\), the **likelihood ratio** is:
+
+\[
+\Lambda_n = \prod_{i=1}^n \frac{f(X_i; \theta_1)}{f(X_i; \theta_0)}
+\]
+
+or equivalently,
+
+\[
+\log \Lambda_n = \sum_{i=1}^n \log \left( \frac{f(X_i; \theta_1)}{f(X_i; \theta_0)} \right).
+\]
+
+---
+
+## Derivation of Decision Boundaries
+
+To control Type I error (\(\alpha\)) and Type II error (\(\beta\)), Wald proposed comparing the likelihood ratio \(\Lambda_n\) with two thresholds.
+
+- Accept \(H_0\) if \(\Lambda_n \leq B\)  
+- Accept \(H_1\) if \(\Lambda_n \geq A\)  
+- Continue sampling otherwise
+
+where  
+
+\[
+A = \frac{1-\beta}{\alpha}, 
+\qquad 
+B = \frac{\beta}{1-\alpha}.
+\]
+
+### Why these thresholds?
+
+1. **Type I error control**: Probability of wrongly rejecting \(H_0\) should not exceed \(\alpha\).  
+   This sets the *upper boundary* \(A\).
+
+2. **Type II error control**: Probability of wrongly rejecting \(H_1\) should not exceed \(\beta\).  
+   This sets the *lower boundary* \(B\).
+
+Thus, the SPRT is designed so that:
+
+\[
+P(\text{Reject } H_0 | H_0 \text{ true}) \leq \alpha, \qquad
+P(\text{Reject } H_1 | H_1 \text{ true}) \leq \beta.
+\]
+
+This guarantees the desired error rates in the **sequential** framework.
+
+---
+
+# Example 1: Binomial Data
+
+Suppose we want to test whether the probability of success is \(p_0 = 0.1\) vs \(p_1 = 0.3\).
+
+```{r, message=FALSE}
+library(SPRT)
+
+# Simulated binary outcomes (1 = success, 0 = failure)
+x <- c(0,0,1,0,1,1,1,0,0,1,0,0)
+
+# Run SPRT
+res <- sprt(x, alpha = 0.05, beta = 0.1, p0 = 0.1, p1 = 0.3)
+
+# Print results
+res
+
+# Plot sequential test path
+sprt_plot(res)
+
+
+# Observations from a Normal distribution
+x1 <- c(52, 55, 58, 63, 66, 70, 74)
+
+result1 <- sprt(
+  x1,
+  alpha = 0.05,
+  beta = 0.1,
+  p0 = 50,
+  p1 = 65,
+  dist = "normal",
+  sigma = 10
+)
+
+result1
+sprt_plot(result1)
+# Yields from a fertilizer trial (kg/plot)
+yield <- c(47, 50, 52, 49, 58, 61, 63, 54, 57)
+
+fert_test <- sprt(
+  yield,
+  alpha = 0.05,
+  beta = 0.1,
+  p0 = 45,
+  p1 = 55,
+  dist = "normal",
+  sigma = 8
+)
+
+fert_test
+sprt_plot(fert_test)
+
